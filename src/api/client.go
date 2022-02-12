@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
-import "strings"
 
 type HttpHeader struct {
 	name  string
@@ -18,7 +18,7 @@ type AuthorizedApiRequest struct {
 	token   string
 }
 
-func newAuthorizedApiRequest(token string) AuthorizedApiRequest {
+func NewAuthorizedApiRequest(token string, baseUrl string) AuthorizedApiRequest {
 	req := AuthorizedApiRequest{}
 	authorisationHeader := HttpHeader{
 		"Authorization",
@@ -29,15 +29,17 @@ func newAuthorizedApiRequest(token string) AuthorizedApiRequest {
 		"application/json",
 	}
 	req.headers = append(req.headers, authorisationHeader, contentTypeHeader)
+	req.token = token
+	req.baseUrl = baseUrl
 
 	return req
 }
 
-type apiRequest interface {
+type CheckoutApiRequest interface {
 	getBody() string
 	getUrl() string
 	getMethod() string
-	addCustomHeader()
+	addCustomHeader(header HttpHeader)
 	getHeaders() []HttpHeader
 }
 
@@ -48,15 +50,15 @@ type GetSelectionRequest struct {
 	method    string
 }
 
-func (req *GetSelectionRequest) getBody() string {
+func (req GetSelectionRequest) getBody() string {
 	return ""
 }
 
-func (req *GetSelectionRequest) getUrl() string {
+func (req GetSelectionRequest) getUrl() string {
 	return req.authedReq.baseUrl + "/selection"
 }
 
-func (req *GetSelectionRequest) getMethod() string {
+func (req GetSelectionRequest) getMethod() string {
 	return "GET"
 }
 
@@ -64,11 +66,11 @@ func (req *GetSelectionRequest) addCustomHeader(header HttpHeader) {
 	req.authedReq.headers = append(req.authedReq.headers, header)
 }
 
-func (req *GetSelectionRequest) getHeaders() []HttpHeader {
+func (req GetSelectionRequest) getHeaders() []HttpHeader {
 	return req.authedReq.headers
 }
 
-func newGetSelectionRequest(authedReq AuthorizedApiRequest) GetSelectionRequest {
+func NewGetSelectionRequest(authedReq AuthorizedApiRequest) GetSelectionRequest {
 	req := GetSelectionRequest{}
 	req.authedReq = authedReq
 
@@ -103,7 +105,7 @@ func (req *AddItemRequest) getHeaders() []HttpHeader {
 	return req.authedReq.headers
 }
 
-func newAddItemRequest(authedReq AuthorizedApiRequest, item string) AddItemRequest {
+func NewAddItemRequest(authedReq AuthorizedApiRequest, item string) AddItemRequest {
 	req := AddItemRequest{}
 	req.authedReq = authedReq
 	req.item = item
@@ -139,7 +141,7 @@ func (req *SetPaymentMethodRequest) getHeaders() []HttpHeader {
 	return req.authedReq.headers
 }
 
-func newSetPaymentMethodRequest(authedReq AuthorizedApiRequest, paymentMethodUri string) SetPaymentMethodRequest {
+func NewSetPaymentMethodRequest(authedReq AuthorizedApiRequest, paymentMethodUri string) SetPaymentMethodRequest {
 	req := SetPaymentMethodRequest{}
 	req.authedReq = authedReq
 	req.paymentMethodUri = paymentMethodUri
@@ -174,7 +176,7 @@ func (req *InitCheckoutRequest) getHeaders() []HttpHeader {
 	return req.authedReq.headers
 }
 
-func newInitCheckoutRequest(authedReq AuthorizedApiRequest, body string) InitCheckoutRequest {
+func NewInitCheckoutRequest(authedReq AuthorizedApiRequest, body string) InitCheckoutRequest {
 	req := InitCheckoutRequest{}
 	req.authedReq = authedReq
 	req.body = body
@@ -209,7 +211,7 @@ func (req *ReceiptRequest) getHeaders() []HttpHeader {
 	return req.authedReq.headers
 }
 
-func newReceiptRequest(authedReq AuthorizedApiRequest, body string) ReceiptRequest {
+func NewReceiptRequest(authedReq AuthorizedApiRequest, body string) ReceiptRequest {
 	req := ReceiptRequest{}
 	req.authedReq = authedReq
 	req.body = body
@@ -217,7 +219,7 @@ func newReceiptRequest(authedReq AuthorizedApiRequest, body string) ReceiptReque
 	return req
 }
 
-func sendApiRequest(apiRequest apiRequest) {
+func SendApiRequest(apiRequest CheckoutApiRequest) {
 	client := &http.Client{}
 	reader := strings.NewReader(apiRequest.getBody())
 	request, _ := http.NewRequest(apiRequest.getMethod(), apiRequest.getUrl(), reader)
@@ -238,19 +240,4 @@ func sendApiRequest(apiRequest apiRequest) {
 
 	sb := string(body)
 	log.Printf(sb)
-}
-
-func finalizeCheckout() {
-
-	authedReq := AuthorizedApiRequest{}
-	getSelection := newGetSelectionRequest(authedReq)
-
-	//init selection
-
-	//get selection
-	//add item
-	//set payment method
-	//inject payment details
-
-	//receipt + notification calls
 }
