@@ -1,28 +1,17 @@
 package main
 
-import (
-	"concurrent-checkout/src/api"
-	"github.com/joho/godotenv"
-	"log"
-	"os"
-)
+import "concurrent-checkout/src/checkout"
 
 func main() {
-	finalizeCheckout()
-}
 
-func finalizeCheckout() {
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		log.Fatalf("Error loading .env file")
+	for i := 0; i < 20; i++ {
+		initialisedCheckout := checkout.InitCheckout()
+		if i%2 == 0 {
+			checkout.FinaliseCheckoutWithReceiptRequest(initialisedCheckout)
+			checkout.FinaliseCheckoutWithNotificationRPC(initialisedCheckout)
+		} else {
+			checkout.FinaliseCheckoutWithNotificationRPC(initialisedCheckout)
+			checkout.FinaliseCheckoutWithReceiptRequest(initialisedCheckout)
+		}
 	}
-
-	token := os.Getenv("API_TOKEN")
-	baseUrl := os.Getenv("API_BASE_URL")
-
-	authedReq := api.NewAuthorizedApiRequest(token, baseUrl)
-	getSelection := api.NewGetSelectionRequest(authedReq)
-
-	api.SendApiRequest(&getSelection)
 }
