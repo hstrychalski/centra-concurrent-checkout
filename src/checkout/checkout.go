@@ -69,8 +69,8 @@ func InitCheckout() InitialisedCheckout {
 func FinaliseCheckoutWithReceiptRequest(initedCheckout InitialisedCheckout) {
 	receiptReq, _ := CreateReceiptRequest(initedCheckout.paymentMethodType, initedCheckout.authedReq)
 	receiptReq.AddCustomHeader(api.HttpHeader{Name: "Test-Case", Value: "3"})
-	res := api.SendApiRequest(receiptReq)
 	time.Sleep(5 * time.Second)
+	res := api.SendApiRequest(receiptReq)
 
 	fmt.Printf("Finalised order with number:%s\n", res.OrderJSON.OrderNumber)
 }

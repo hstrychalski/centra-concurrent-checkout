@@ -1,11 +1,15 @@
 package main
 
-import "concurrent-checkout/src/checkout"
+import (
+	"concurrent-checkout/src/checkout"
+	"sync"
+)
 
 func main() {
-
-	for i := 0; i < 20; i++ {
+	var wg sync.WaitGroup
+	for i := 0; i < 200; i++ {
 		initialisedCheckout := checkout.InitCheckout()
+		wg.Add(1)
 		if i%2 == 0 {
 			go checkout.FinaliseCheckoutWithReceiptRequest(initialisedCheckout)
 			go checkout.FinaliseCheckoutWithNotificationRPC(initialisedCheckout)
@@ -14,4 +18,5 @@ func main() {
 			go checkout.FinaliseCheckoutWithReceiptRequest(initialisedCheckout)
 		}
 	}
+	wg.Wait()
 }
